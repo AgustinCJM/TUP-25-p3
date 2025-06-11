@@ -13,33 +13,72 @@
     
     <div class="row mb-4">
         <div class="col-12">
+            <h4>Agregar nuevo producto</h4>
+            <EditForm Model="nuevoProducto" OnValidSubmit="AgregarProducto">
+                <div class="mb-2">
+                    <input class="form-control" placeholder="Nombre" @bind="nuevoProducto.Nombre" required />
+                </div>
+                <div class="form-control" placeholder="Nombre" @bind-Value="nuevoProducto.Descripcion" required/>
+                
+            </EditForm>
             <button class="btn btn-primary" @onclick="ObtenerDatosDelServidor">Obtener datos del servidor</button>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-12">            
-            @if (cargando) {
-                <div class="alert alert-info">Cargando datos...</div>
-            } else if (datos != null) {                <div class="card" style="width: 300px;">
-                    <div class="card-header">
-                        Respuesta del servidor
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">@datos.Mensaje</h5>
-                        <p class="card-text">Fecha: @datos.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</p>
-                    </div>
-                </div>
-            } else if (error != null) {
-                <div class="alert alert-danger">
-                    Error: @error
-                </div>
-            }
+        <div class="col-12">
+            <button class="btn btn-success" @onclick="ObtenerProductos">Mostrar productos</button>
         </div>
-    </div>
-</div>
+    </div> 
+    @if (productos != null){
+        <div class="row">
+            @foreach (var p in productos){
+                <div class="col-4 mb-3">
+                    <div class="card">
+                        <img src="@p.ImagenUrl" class="card-img-top" alt="@p.Nombre">
+                        <div class="card-body">
+                        <h5 class="card-title">@p.Nombre</h5>
+                        <p class="card-text">@p.Descripcion</p>
+                        <p class="card-text"><b>Precio:</b> $@p.Precio</p>
+                        <p class="card-text"><b>Stock:</b> @p.Stock</p>
+                    </div>
+                </div>      
+            </div>
+        }  
+    }
+    @if (cargando) {
+        <div class="alert alert-info">Cargando datos...</div>
+    } else if (datos != null) {                
+        <div class="card" style="width: 300px;">
+            <div class="card-header">
+                Respuesta del servidor
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">@datos.Mensaje</h5>
+                <p class="card-text">Fecha: @datos.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</p>
+            </div>
+        </div>
+    } else if (error != null) {
+        <div class="alert alert-danger">
+            Error: @error
+        </div>
+    }
+</div> 
 
 @code {
+    private List<Producto> productos;
+    private async Task ObtenerProductos() {
+        try {
+            cargando = true;
+            error = null;
+            productos = await ApiService.ObtenerProductosAsync();
+        } catch (Exception ex) {
+            error = ex.Message;
+            productos = null;
+        } finally {
+            cargando = false;
+        }
+    }
     private DatosRespuesta datos;
     private string error;
     private bool cargando = false;
@@ -55,5 +94,15 @@
         } finally {
             cargando = false;
         }
+    }
+
+    public class Producto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public string Descripcion { get; set; }
+        public decimal Precio { get; set; }
+        public int Stock { get; set; }
+        public string ImagenUrl { get; set; }
     }
 }
